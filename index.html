@@ -9,51 +9,48 @@
 <body>
   <header class="topbar">
     <div class="title">2026年3月版</div>
-    <button id="orderBtn" class="order-btn" type="button">受注</button>
   </header>
 
   <main id="appPanel" class="app">
-
-    <section class="sum-card">
-      <div class="sum-row">
-        <div class="sum-label">一般品 合計（税抜/税込）</div>
-        <div class="sum-val"><span id="sumGeneralEx">0</span> / <span id="sumGeneralIn">0</span></div>
-      </div>
-      <div class="sum-row">
-        <div class="sum-label">ナノニードル 合計（税抜/税込）</div>
-        <div class="sum-val"><span id="sumNeedleEx">0</span> / <span id="sumNeedleIn">0</span></div>
-      </div>
-      <div class="sum-row">
-        <div class="sum-label">ナノカニューレ 合計（税抜/税込）</div>
-        <div class="sum-val"><span id="sumCannulaEx">0</span> / <span id="sumCannulaIn">0</span></div>
-      </div>
-
-      <div class="sum-row sum-all">
-        <div class="sum-label">合計（税抜/税込）</div>
-        <div class="sum-val"><span id="sumAllEx">0</span> / <span id="sumAllIn">0</span></div>
-      </div>
-    </section>
-
     <section class="group">
       <h2>一般品</h2>
       <div id="tblGeneral"></div>
     </section>
 
-    <section class="group details-open">
-      <details open>
+    <section class="group">
+      <details>
         <summary>ナノニードル</summary>
         <div id="tblNeedle"></div>
       </details>
     </section>
 
-    <section class="group details-open">
-      <details open>
+    <section class="group">
+      <details>
         <summary>ナノカニューレ</summary>
         <div id="tblCannula"></div>
       </details>
     </section>
 
+    <!-- 下部固定バーに隠れないよう余白 -->
+    <div class="bottom-spacer"></div>
   </main>
+
+  <!-- 下部固定：合計＆受注ボタン -->
+  <div class="bottom-bar">
+    <div class="bottom-sums">
+      <div class="sumline">
+        <div class="lbl">合計（税抜/税込）</div>
+        <div class="val"><span id="sumAllEx">0</span> / <span id="sumAllIn">0</span></div>
+      </div>
+      <div class="subline">
+        <span>一般品: <span id="sumGeneralIn">0</span></span>
+        <span>ニードル: <span id="sumNeedleIn">0</span></span>
+        <span>カニューレ: <span id="sumCannulaIn">0</span></span>
+      </div>
+    </div>
+
+    <button id="orderBtn" class="order-btn" type="button">受注</button>
+  </div>
 
   <!-- 受注モーダル -->
   <div id="orderModal" class="modal hidden" role="dialog" aria-modal="true">
