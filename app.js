@@ -1,26 +1,5 @@
-﻿const fmt = (n) => (Math.trunc(n)).toLocaleString("ja-JP");
+const fmt = (n) => (Math.trunc(n)).toLocaleString("ja-JP");
 const byId = (id) => document.getElementById(id);
-
-async function api(path, opt){
-  const res = await fetch(path, { credentials: "include", ...opt });
-  if(!res.ok) throw new Error(res.status);
-  return res;
-}
-async function isAuthed(){
-  const res = await api("/api/me");
-  const j = await res.json();
-  return !!j.authed;
-}
-async function login(code){
-  await api("/api/login", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ code })
-  });
-}
-async function logout(){
-  await api("/api/logout", { method:"POST" });
-}
 
 function hasTiers(item){
   return Array.isArray(item.tiers) && item.tiers.length;
@@ -41,34 +20,19 @@ function calcLine(item, qty){
   const inc = (item.rounding === "int") ? Math.trunc(incRaw) : Math.round(incRaw);
   return { q, unit, ex, inc };
 }
+function norm(s){ return (s || "").replace(/[ \u3000]/g, "").trim(); }
 
-/* 文字ゆれ対策：半角/全角スペース除去 */
-function norm(s){
-  return (s || "").replace(/[ \u3000]/g, "").trim();
-}
-
-/**
- * 色分け：row（Excel行番号）で確実に判定
- * - LNC：水色（名前判定）
- * - JBPポーサインPRO：オレンジ
- * - それ以降～JBPプラセンタEQドリンク：ピンク
- */
 function makeGeneralRowClassifier(general){
   const START_KEY = "JBPポーサインPRO";
   const END_KEY   = "JBPプラセンタEQドリンク";
-
   const start = general.find(x => norm(x.name).includes(START_KEY));
   const end   = general.find(x => norm(x.name).includes(END_KEY));
-
   const rs = start?.row != null ? Number(start.row) : null;
   const re = end?.row   != null ? Number(end.row)   : null;
 
   return (item) => {
     const nameN = norm(item.name);
-
-    // LNCはそのまま
     if(/^LNC/i.test(nameN) || nameN.includes("LNC")) return "row-lnc";
-
     if(item.group !== "一般品") return "row-default";
     if(item.row == null || rs == null || re == null) return "row-default";
 
@@ -78,7 +42,6 @@ function makeGeneralRowClassifier(general){
     return "row-jbp-pink";
   };
 }
-
 function makeOtherRowClassifier(){
   return (item) => {
     const n = norm(item.name);
@@ -144,100 +107,88 @@ function buildTable(rootEl, items, onChange, rowClassFn){
   };
 }
 
+// ★ここがポイント：GitHub Pagesでは /api ではなく products.json を読む
 async function loadProducts(){
-  const res = await api("/api/products");
+  const res = await fetch("./products.json", { cache: "no-store" });
+  if(!res.ok) throw new Error("products.json が読み込めません: " + res.status);
   return await res.json();
 }
 
 async function main(){
+  // ログインUIは使わない（あっても隠す）
   const loginPanel = byId("loginPanel");
   const appPanel   = byId("appPanel");
-  const loginErr   = byId("loginErr");
+  if(loginPanel) loginPanel.classList.add("hidden");
+  if(appPanel) appPanel.classList.remove("hidden");
 
-  async function showAuthed(){
-    loginPanel.classList.add("hidden");
-    appPanel.classList.remove("hidden");
+  // ログアウトボタンも不要なので隠す
+  const logoutBtn = byId("logoutBtn");
+  if(logoutBtn) logoutBtn.style.display = "none";
 
-    const all = await loadProducts();
-    const general = all.filter(x => x.group === "一般品");
-    const needle  = all.filter(x => x.group === "ナノニードル");
-    const cannula = all.filter(x => x.group === "ナノカニューレ");
+  const all = await loadProducts();
+  const general = all.filter(x => x.group === "一般品");
+  const needle  = all.filter(x => x.group === "ナノニードル");
+  const cannula = all.filter(x => x.group === "ナノカニューレ");
 
-    const generalRowClass = makeGeneralRowClassifier(general);
-    const otherRowClass   = makeOtherRowClassifier();
+  const generalRowClass = makeGeneralRowClassifier(general);
+  const otherRowClass   = makeOtherRowClassifier();
 
-    const tblG = buildTable(byId("tblGeneral"), general, (idx, qtyStr)=>{
-      const it = general[idx];
-      const {q, unit, ex, inc} = calcLine(it, qtyStr);
-      if(hasTiers(it)) tblG.setUnit(idx, q > 0 ? fmt(unit) : "—");
-      tblG.updateRow(idx, ex, inc);
-      recalc();
-    }, generalRowClass);
+  const tblG = buildTable(byId("tblGeneral"), general, (idx, qtyStr)=>{
+    const it = general[idx];
+    const {q, unit, ex, inc} = calcLine(it, qtyStr);
+    if(hasTiers(it)) tblG.setUnit(idx, q > 0 ? fmt(unit) : "—");
+    tblG.updateRow(idx, ex, inc);
+    recalc();
+  }, generalRowClass);
 
-    const tblN = buildTable(byId("tblNeedle"), needle, (idx, qtyStr)=>{
-      const it = needle[idx];
-      const {q, unit, ex, inc} = calcLine(it, qtyStr);
-      if(hasTiers(it)) tblN.setUnit(idx, q > 0 ? fmt(unit) : "—");
-      tblN.updateRow(idx, ex, inc);
-      recalc();
-    }, otherRowClass);
+  const tblN = buildTable(byId("tblNeedle"), needle, (idx, qtyStr)=>{
+    const it = needle[idx];
+    const {q, unit, ex, inc} = calcLine(it, qtyStr);
+    if(hasTiers(it)) tblN.setUnit(idx, q > 0 ? fmt(unit) : "—");
+    tblN.updateRow(idx, ex, inc);
+    recalc();
+  }, otherRowClass);
 
-    const tblC = buildTable(byId("tblCannula"), cannula, (idx, qtyStr)=>{
-      const it = cannula[idx];
-      const {q, unit, ex, inc} = calcLine(it, qtyStr);
-      if(hasTiers(it)) tblC.setUnit(idx, q > 0 ? fmt(unit) : "—");
-      tblC.updateRow(idx, ex, inc);
-      recalc();
-    }, otherRowClass);
+  const tblC = buildTable(byId("tblCannula"), cannula, (idx, qtyStr)=>{
+    const it = cannula[idx];
+    const {q, unit, ex, inc} = calcLine(it, qtyStr);
+    if(hasTiers(it)) tblC.setUnit(idx, q > 0 ? fmt(unit) : "—");
+    tblC.updateRow(idx, ex, inc);
+    recalc();
+  }, otherRowClass);
 
-    function sumTable(tableDivId){
-      const rows = byId(tableDivId).querySelectorAll("tbody tr");
-      let ex=0, inc=0;
-      rows.forEach(r=>{
-        ex  += Number(r.querySelector(".ex").textContent.replace(/,/g,"") || 0);
-        inc += Number(r.querySelector(".inc").textContent.replace(/,/g,"") || 0);
-      });
-      return {ex, inc};
-    }
-
-    function recalc(){
-      const sg = sumTable("tblGeneral");
-      const sn = sumTable("tblNeedle");
-      const sc = sumTable("tblCannula");
-
-      byId("sumGeneralEx").textContent = fmt(sg.ex);
-      byId("sumGeneralIn").textContent = fmt(sg.inc);
-      byId("sumNeedleEx").textContent  = fmt(sn.ex);
-      byId("sumNeedleIn").textContent  = fmt(sn.inc);
-      byId("sumCannulaEx").textContent = fmt(sc.ex);
-      byId("sumCannulaIn").textContent = fmt(sc.inc);
-      byId("sumAllEx").textContent     = fmt(sg.ex + sn.ex + sc.ex);
-      byId("sumAllIn").textContent     = fmt(sg.inc + sn.inc + sc.inc);
-    }
+  function sumTable(tableDivId){
+    const rows = byId(tableDivId).querySelectorAll("tbody tr");
+    let ex=0, inc=0;
+    rows.forEach(r=>{
+      ex  += Number(r.querySelector(".ex").textContent.replace(/,/g,"") || 0);
+      inc += Number(r.querySelector(".inc").textContent.replace(/,/g,"") || 0);
+    });
+    return {ex, inc};
   }
 
-  if(await isAuthed()){
-    await showAuthed();
-  }else{
-    loginPanel.classList.remove("hidden");
-    appPanel.classList.add("hidden");
+  function recalc(){
+    const sg = sumTable("tblGeneral");
+    const sn = sumTable("tblNeedle");
+    const sc = sumTable("tblCannula");
+
+    byId("sumGeneralEx").textContent = fmt(sg.ex);
+    byId("sumGeneralIn").textContent = fmt(sg.inc);
+    byId("sumNeedleEx").textContent  = fmt(sn.ex);
+    byId("sumNeedleIn").textContent  = fmt(sn.inc);
+    byId("sumCannulaEx").textContent = fmt(sc.ex);
+    byId("sumCannulaIn").textContent = fmt(sc.inc);
+    byId("sumAllEx").textContent     = fmt(sg.ex + sn.ex + sc.ex);
+    byId("sumAllIn").textContent     = fmt(sg.inc + sn.inc + sc.inc);
   }
-
-  byId("loginBtn").addEventListener("click", async ()=>{
-    loginErr.textContent = "";
-    const code = byId("codeInput").value.trim();
-    try{
-      await login(code);
-      await showAuthed();
-    }catch(e){
-      loginErr.textContent = "認証コードが違います。";
-    }
-  });
-
-  byId("logoutBtn").addEventListener("click", async ()=>{
-    await logout();
-    location.reload();
-  });
 }
 
-main().catch(console.error);
+main().catch(e=>{
+  // 画面にエラーが出るようにする（スマホでデバッグしやすい）
+  const el = document.createElement("div");
+  el.style.padding = "12px";
+  el.style.color = "red";
+  el.textContent = "エラー: " + (e?.message || e);
+  document.body.prepend(el);
+  console.error(e);
+});
