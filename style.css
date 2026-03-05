@@ -1,171 +1,208 @@
-﻿:root{
-  --bg: #f3f6fb;
-  --card: #ffffff;
-  --border: #c9c9c9;
-  --grid: #d9d9d9;
-
-  /* セクション見出し */
-  --head: #ddebf7;
-
-  /* 合計強調 */
-  --total: #fff2cc;
-  --accent: #2f5597;
-
-  /* 製品群 色分け（ここだけ微調整すればOK） */
-  --jbp-orange: #fde9d9;  /* 薄オレンジ */
-  --jbp-red:    #f8cbad;  /* 薄赤（サーモン寄り） */
-  --lnc-blue:   #d9eef7;  /* 薄水色 */
-
-  --text: #111;
-  --muted: #666;
+/* 基本 */
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  background:#f5f6f8;
+  color:#111;
 }
+.right{ text-align:right; }
+.hidden{ display:none !important; }
 
-body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--text)}
-.wrap{max-width:1100px;margin:0 auto;padding:12px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-h1{font-size:18px;margin:0}
-
-.card{
-  background:var(--card);
-  border-radius:12px;
-  border:1px solid var(--border);
-  box-shadow:0 2px 10px rgba(0,0,0,.05);
-  padding:12px;
-  margin-bottom:12px
-}
-
-.row{display:flex;gap:8px;align-items:center}
-input{
-  flex:1;
-  padding:12px;
-  border:1px solid #bfbfbf;
-  border-radius:10px;
-  font-size:18px; /* スマホ前提 */
-}
-button{padding:12px 12px;border:0;border-radius:10px;font-size:14px;cursor:pointer}
-button.ghost{background:transparent;border:1px solid #bfbfbf}
-.hidden{display:none}
-.muted{color:var(--muted);margin-top:4px}
-.err{color:#c00}
-
-/* セクションヘッダー */
-.sectionHead{
+/* ヘッダー */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:10px 12px;
-  margin:-12px -12px 10px -12px;
-  background:var(--head);
-  border-bottom:1px solid var(--border);
-  border-top-left-radius:12px;
-  border-top-right-radius:12px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,.08);
 }
-.sectionHead h2{font-size:16px;margin:0}
-.hint{font-size:12px;color:var(--muted)}
+.title{
+  font-weight: 800;
+  font-size: 16px;
+}
 
-details.section{padding:0}
-details.section > summary{list-style:none;cursor:pointer}
-details.section > summary::-webkit-details-marker{display:none}
-details.section .sectionBody{padding:0 12px 12px 12px}
-details.section .sectionHead{margin:0}
+/* 受注ボタン */
+.order-btn{
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: #fff;
+  font-weight: 800;
+}
 
-/* 表（スマホ前提：横スクロール許可） */
-.section.excel{overflow-x:auto}
-table{
-  width:100%;
-  border-collapse:collapse;
-  border:1px solid var(--grid);
+/* 全体 */
+.app{
+  padding: 10px 10px 22px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+/* 合計カード */
+.sum-card{
   background:#fff;
-  min-width:720px; /* スマホでも横スクロールで崩れない */
+  border-radius: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+  margin-bottom: 12px;
 }
-th,td{
-  border:1px solid var(--grid);
-  padding:10px 8px;
-  font-size:14px;
-  vertical-align:middle;
-}
-th{
-  background:#f2f2f2;
-  color:#333;
-  text-align:left;
-  font-weight:700;
-  white-space:nowrap;
-}
-.right{text-align:right}
-.qty{
-  width:90px;
-  font-size:18px;
-  padding:10px;
-}
-
-/* 製品群 色分け（行の背景） */
-tr.row-jbp-orange td{ background: var(--jbp-orange); }
-tr.row-jbp-red td{    background: var(--jbp-red); }
-tr.row-lnc td{        background: var(--lnc-blue); }
-tr.row-default td{    background: #fff; }
-
-/* 小計 */
-.sum{
+.sum-row{
   display:flex;
-  justify-content:space-between;
-  gap:12px;
-  margin-top:10px;
-  padding-top:8px;
-  border-top:1px dashed #cfcfcf;
-  font-size:15px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(0,0,0,.12);
 }
-.sum.big{font-size:20px;font-weight:900}
+.sum-row:last-child{ border-bottom:none; }
+.sum-label{ font-size: 13px; color:#333; }
+.sum-val{ font-weight: 800; }
+.sum-all .sum-label{ font-weight: 800; }
+.sum-all .sum-val{ font-size: 16px; }
 
-/* 合計枠強調（sticky） */
-.total{
-  background:var(--total);
-  border:2px solid var(--accent);
-  position:sticky;
-  bottom:10px;
+/* グループ */
+.group{
+  background:#fff;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 4px 12px rgba(0,0,0,.04);
+  padding: 10px 10px 12px;
+  margin-bottom: 12px;
 }
-.total .sectionHead{background:var(--total)}
-.total .sum.big span{color:#000}
-
-@media (max-width: 520px){
-  /* 規格は表示したいので消さない */
-  .col-tax{display:none}
-  table{min-width:720px}
+.group h2{
+  margin: 4px 4px 10px;
+  font-size: 15px;
+}
+details summary{
+  cursor: pointer;
+  font-weight: 800;
+  padding: 4px 4px 10px;
 }
 
-/* 数字列の揺れ防止：等幅数字 + 最小幅固定 */
-.col-num{
-  font-variant-numeric: tabular-nums;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  min-width: 92px;
+/* テーブル（横スクロール無し前提：列を減らしてます） */
+.items-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+.items-table th, .items-table td{
+  padding: 7px 6px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  vertical-align: middle;
+}
+.items-table thead th{
+  font-size: 12px;
+  color:#333;
+  background:#fafafa;
+  position: sticky;
+  top: 50px; /* ヘッダー分 */
+  z-index: 10;
+}
+.items-table .name{
+  white-space: normal;
+  word-break: break-word;
+  font-size: 13px;
+}
+.items-table .col-num{
+  width: 88px;
   white-space: nowrap;
 }
-
-/* 数量入力も揺れないよう幅固定 */
-.col-qty{ min-width: 90px; }
-.qty{ width: 84px; }
-
-/* 0のセルが増えても行高が変わらないように */
-td{ line-height: 1.2; }
-
-/* iOSで入力時のズーム/揺れを抑えるため（既にfont-sizeは大きめだが念押し） */
-input.qty{ font-size: 18px; }
-
-/* 追加：JBPピンク */
-:root{
-  --jbp-pink:   #f7d7e6;  /* 薄ピンク（必要なら調整） */
+.items-table .col-qty{
+  width: 78px;
+}
+.items-table input.qty{
+  width: 64px;
+  max-width: 64px;
+  padding: 6px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.18);
+  text-align: right;
+  background: #fff;
 }
 
-/* 行の背景 */
-tr.row-jbp-pink td{   background: var(--jbp-pink); }
+/* 色分け（元Excelの雰囲気） */
+.row-jbp-orange td{ background: #ffe0b2; } /* PRO（オレンジ） */
+.row-jbp-pink td{ background: #ffd6e7; }   /* 以降（ピンク） */
+.row-lnc td{ background: #d9f0ff; }        /* LNC（水色） */
 
-/* 数値入力のスピナー（タップで増減）を消す */
-input[type=number]::-webkit-outer-spin-button,
-input[type=number]::-webkit-inner-spin-button{
-  -webkit-appearance: none;
+/* モーダル */
+.modal{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+.modal-card{
+  width: min(680px, 100%);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.modal-title{ font-weight: 900; }
+.modal-close{
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.modal-body{
+  padding: 12px 14px;
+  max-height: 60vh;
+  overflow: auto;
+}
+.order-empty{ color:#666; padding: 8px 0; }
+.order-ul{
+  list-style: none;
+  padding: 0;
   margin: 0;
 }
-input[type=number]{
-  -moz-appearance: textfield;
+.order-ul li{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(0,0,0,.15);
+}
+.order-name{ flex: 1; word-break: break-word; }
+.order-qty{ white-space: nowrap; font-weight: 900; }
+
+.modal-foot{
+  display:flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+.modal-copy, .modal-ok{
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: #fff;
+  font-weight: 800;
 }
 
+/* 画面が小さいときはさらに詰める */
+@media (max-width: 520px){
+  .title{ font-size: 15px; }
+  .items-table th, .items-table td{ padding: 6px 4px; }
+  .items-table .col-num{ width: 78px; }
+  .items-table input.qty{ width: 60px; max-width: 60px; }
+}
