@@ -52,12 +52,11 @@ function makeOtherRowClassifier(){
 
 function buildTable(rootEl, items, onChange, rowClassFn){
   const table = document.createElement("table");
+  table.className = "items-table";
   table.innerHTML = `
     <thead>
       <tr>
         <th>品名</th>
-        <th class="col-spec">規格</th>
-        <th class="right col-tax">税率</th>
         <th class="right col-num">単価</th>
         <th class="right col-qty">数量</th>
         <th class="right col-num">税抜</th>
@@ -72,20 +71,16 @@ function buildTable(rootEl, items, onChange, rowClassFn){
     const tr = document.createElement("tr");
     tr.className = rowClassFn(it);
 
-    const initialUnit = hasTiers(it) ? "—" : fmt(it.unitPrice ?? 0);
+    // ★規格は品名に統合（全商品）
+    const mergedName = `${it.name}${it.spec ? " " + it.spec : ""}`;
 
-    const mergedName =
-      (it.group === "ナノニードル" || it.group === "ナノカニューレ")
-        ? `${it.name}${it.spec ? " " + it.spec : ""}`
-        : it.name;
+    const initialUnit = hasTiers(it) ? "—" : fmt(it.unitPrice ?? 0);
 
     tr.innerHTML = `
       <td class="name">${mergedName}</td>
-      <td class="col-spec">${(it.group === "ナノニードル" || it.group === "ナノカニューレ") ? "" : (it.spec ?? "")}</td>
-      <td class="right col-tax">${it.taxRate === 0.08 ? "8%" : "10%"}</td>
       <td class="right unit col-num">${initialUnit}</td>
       <td class="right col-qty">
-        <input class="qty" type="number" min="0" step="1" value="" inputmode="numeric">
+        <input class="qty" type="number" min="0" step="1" value="" inputmode="numeric" placeholder="">
       </td>
       <td class="right ex col-num">0</td>
       <td class="right inc col-num">0</td>
@@ -108,10 +103,13 @@ function buildTable(rootEl, items, onChange, rowClassFn){
     setUnit(idx, txt){
       const tr = tbody.children[idx];
       tr.querySelector(".unit").textContent = txt;
+    },
+    getQty(idx){
+      const tr = tbody.children[idx];
+      return tr.querySelector(".qty").value;
     }
   };
 }
-
 // ★GitHub Pages用：products.json を直接読む
 async function loadProducts(){
   const res = await fetch("./products.json", { cache: "no-store" });
@@ -195,4 +193,5 @@ main().catch(e=>{
   document.body.prepend(el);
   console.error(e);
 });
+
 
