@@ -127,11 +127,10 @@ tr.row-default td{    background: #fff; }
 .total .sectionHead{background:var(--total)}
 .total .sum.big span{color:#000}
 
-/* スマホが狭い時：列を少し減らす（必要なら解除OK） */
 @media (max-width: 520px){
-  .col-spec{display:none}
+  /* 規格は表示したいので消さない */
   .col-tax{display:none}
-  table{min-width:560px}
+  table{min-width:720px}
 }
 
 /* 数字列の揺れ防止：等幅数字 + 最小幅固定 */
@@ -169,3 +168,4 @@ input[type=number]::-webkit-inner-spin-button{
 input[type=number]{
   -moz-appearance: textfield;
 }
+
