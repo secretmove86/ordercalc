@@ -118,6 +118,12 @@ function buildTable(rootEl, items, onChange, rowClassFn){
       const tr = tbody.children[idx];
       return tr.querySelector(".qty").value;
     },
+    clearAllQty(){
+      tbody.querySelectorAll("input.qty").forEach(inp => { inp.value = ""; });
+      // 税込表示もゼロに戻す
+      tbody.querySelectorAll(".inc").forEach(td => { td.textContent = "0"; });
+      // tier単価（—）はそのまま。固定単価はそのまま表示。
+    },
     sumInc(){
       let inc = 0;
       tbody.querySelectorAll("tr").forEach(tr=>{
@@ -125,7 +131,7 @@ function buildTable(rootEl, items, onChange, rowClassFn){
       });
       return inc;
     },
-    // 税抜は出さないが、合計の税抜欄が残っている場合に備えて unit*qty を足す
+    // 旧UIに税抜欄が残っている場合の互換（空でもOK）
     sumExForLegacy(){
       let ex = 0;
       tbody.querySelectorAll("tr").forEach(tr=>{
@@ -137,6 +143,41 @@ function buildTable(rootEl, items, onChange, rowClassFn){
       return ex;
     }
   };
+}
+
+function ensureClearButton(){
+  // 既に存在するなら何もしない
+  if(document.getElementById("clearBtn")) return;
+
+  // 「下部固定バー」にボタンを差し込みたいが、HTMLが分からないので安全策：
+  // 1) 受注ボタンがあればその隣に置く
+  // 2) 無ければ body の最後に固定ボタンとして追加
+  const orderBtn = document.getElementById("orderBtn");
+
+  const btn = document.createElement("button");
+  btn.id = "clearBtn";
+  btn.type = "button";
+  btn.textContent = "クリア";
+
+  // 既存の見た目に寄せる（CSSが無くても最低限崩れない）
+  btn.style.padding = "10px 12px";
+  btn.style.borderRadius = "12px";
+  btn.style.border = "1px solid rgba(0,0,0,.15)";
+  btn.style.background = "#fff";
+  btn.style.fontWeight = "900";
+
+  if(orderBtn && orderBtn.parentElement){
+    orderBtn.parentElement.insertBefore(btn, orderBtn); // 受注の左に置く
+    return btn;
+  }
+
+  // fallback：右下固定
+  btn.style.position = "fixed";
+  btn.style.right = "12px";
+  btn.style.bottom = "90px";
+  btn.style.zIndex = "200";
+  document.body.appendChild(btn);
+  return btn;
 }
 
 async function main(){
@@ -151,7 +192,9 @@ async function main(){
   const tblG = buildTable(byId("tblGeneral"), general, (idx, qtyStr)=>{
     const it = general[idx];
     const {q, unit, inc} = calcLine(it, qtyStr);
+    // ★ tier品は数量に応じて単価が変わるので、入力時に単価を更新
     if(hasTiers(it)) tblG.setUnit(idx, q > 0 ? fmt(unit) : "—");
+    // ★ tier品でも固定品でも、単価欄が必ず表示される（固定は初期表示でOK）
     tblG.updateRow(idx, inc);
     recalc();
   }, generalRowClass);
@@ -183,13 +226,12 @@ async function main(){
     const cInc = tblC.sumInc();
     const allInc = gInc + nInc + cInc;
 
-    // 税込系（各所に残っていても更新されるように）
     setTextIfExists("sumGeneralIn", gInc);
     setTextIfExists("sumNeedleIn",  nInc);
     setTextIfExists("sumCannulaIn", cInc);
     setTextIfExists("sumAllIn",     allInc);
 
-    // 旧UIに税抜欄が残っている場合の互換（空でもOK）
+    // 旧UI互換（税抜表示が残っていても壊さない）
     const gEx = tblG.sumExForLegacy();
     const nEx = tblN.sumExForLegacy();
     const cEx = tblC.sumExForLegacy();
@@ -200,6 +242,16 @@ async function main(){
     setTextIfExists("sumCannulaEx", cEx);
     setTextIfExists("sumAllEx",     allEx);
   }
+
+  // ===== クリアボタン =====
+  const clearBtn = ensureClearButton();
+  clearBtn.addEventListener("click", () => {
+    tblG.clearAllQty();
+    tblN.clearAllQty();
+    tblC.clearAllQty();
+    recalc();
+    // 入力位置が変に動かないようスクロールは触らない
+  });
 }
 
 main().catch(e=>{
