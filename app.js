@@ -26,10 +26,12 @@ async function loadProducts(){
   return await res.json();
 }
 
+// 規格を品名に統合（全商品）
 function mergedName(it){
   return `${it.name}${it.spec ? " " + it.spec : ""}`;
 }
 
+// 色分け（一般品のJBP範囲だけ）
 function norm(s){ return (s || "").replace(/[ \u3000]/g, "").trim(); }
 
 function makeGeneralRowClassifier(general){
@@ -62,6 +64,7 @@ function makeOtherRowClassifier(){
 
 /**
  * 列順：品名 → 数量 → 単価 → 税込
+ * 税抜列は廃止
  */
 function buildTable(rootEl, items, onChange, rowClassFn){
   const table = document.createElement("table");
@@ -111,13 +114,9 @@ function buildTable(rootEl, items, onChange, rowClassFn){
       const tr = tbody.children[idx];
       tr.querySelector(".inc").textContent = fmt(inc);
     },
-    clearAll(){
-      tbody.querySelectorAll("input.qty").forEach(inp => { inp.value = ""; });
-      tbody.querySelectorAll(".inc").forEach(td => { td.textContent = "0"; });
-      // 単価は固定値はそのまま、tierは「—」に戻す
-      tbody.querySelectorAll(".unit").forEach(td => {
-        if(td.textContent === "—") return;
-      });
+    getQty(idx){
+      const tr = tbody.children[idx];
+      return tr.querySelector(".qty").value;
     },
     sumInc(){
       let inc = 0;
@@ -126,6 +125,7 @@ function buildTable(rootEl, items, onChange, rowClassFn){
       });
       return inc;
     },
+    // 税抜は出さないが、合計の税抜欄が残っている場合に備えて unit*qty を足す
     sumExForLegacy(){
       let ex = 0;
       tbody.querySelectorAll("tr").forEach(tr=>{
@@ -137,31 +137,6 @@ function buildTable(rootEl, items, onChange, rowClassFn){
       return ex;
     }
   };
-}
-
-function addFloatingClearButton(onClick){
-  // 既にあれば作らない
-  if(document.getElementById("clearBtn")) return;
-
-  const btn = document.createElement("button");
-  btn.id = "clearBtn";
-  btn.type = "button";
-  btn.textContent = "クリア";
-
-  // 固定バーは触らず、右下に小さく固定
-  btn.style.position = "fixed";
-  btn.style.right = "12px";
-  btn.style.bottom = "92px"; // 下部固定バーがある想定で少し上
-  btn.style.zIndex = "9999";
-  btn.style.padding = "10px 12px";
-  btn.style.borderRadius = "12px";
-  btn.style.border = "1px solid rgba(0,0,0,.15)";
-  btn.style.background = "#fff";
-  btn.style.fontWeight = "900";
-  btn.style.boxShadow = "0 6px 18px rgba(0,0,0,.12)";
-
-  btn.addEventListener("click", onClick);
-  document.body.appendChild(btn);
 }
 
 async function main(){
@@ -208,12 +183,13 @@ async function main(){
     const cInc = tblC.sumInc();
     const allInc = gInc + nInc + cInc;
 
+    // 税込系（各所に残っていても更新されるように）
     setTextIfExists("sumGeneralIn", gInc);
     setTextIfExists("sumNeedleIn",  nInc);
     setTextIfExists("sumCannulaIn", cInc);
     setTextIfExists("sumAllIn",     allInc);
 
-    // 固定バーに税抜欄が残っている場合の互換
+    // 旧UIに税抜欄が残っている場合の互換（空でもOK）
     const gEx = tblG.sumExForLegacy();
     const nEx = tblN.sumExForLegacy();
     const cEx = tblC.sumExForLegacy();
@@ -224,14 +200,6 @@ async function main(){
     setTextIfExists("sumCannulaEx", cEx);
     setTextIfExists("sumAllEx",     allEx);
   }
-
-  // ★固定バーは一切触らず、クリアは右下の浮遊ボタンで実装
-  addFloatingClearButton(() => {
-    tblG.clearAll();
-    tblN.clearAll();
-    tblC.clearAll();
-    recalc();
-  });
 }
 
 main().catch(e=>{
